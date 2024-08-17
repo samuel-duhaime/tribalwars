@@ -4,9 +4,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+
 # TODO: Fix the login function
 # Login to Tribal Wars
-async def login(page):
+async def login(page) -> None:
     try:
         # Navigate to the Tribal Wars login page
         await page.goto("https://www.tribalwars.net/")

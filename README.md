@@ -9,3 +9,8 @@ Then you can run the script with the following command:
 ```bash
 poetry run python src/scripts/main.py
 ```
+
+To check the types of the script, you can run the following command:
+```bash
+poetry run mypy src/scripts
+```
