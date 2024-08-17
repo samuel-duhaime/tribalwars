@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "tribalwars"
+version = "0.1.0"
+description = "Scripts for Tribalwars.net"
+authors = ["Samuel Duhaime-Morissette <sduhaimemorissette@gmail.com>"]
+readme = "README.md"
+packages = [{include = "scripts", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+playwright = "^1.46.0"
+python-dotenv = "^1.0.1"
