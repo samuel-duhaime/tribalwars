@@ -1,13 +1,17 @@
+from playwright.async_api import Page
+
 # Recruit some troops
-async def recruit_troop(page, number_of_troops):
+async def recruit_troop(page: Page, number_of_troops: int) -> None:
     try:
         recruitButton = await page.wait_for_selector("input[id^='spear_']")
         print(f"\nRecruiting {number_of_troops} troop(s)...")
         await recruitButton.focus()
         await page.keyboard.type(str(number_of_troops))
         await page.keyboard.press("Enter")
+        return
     except Exception as e:
         print(f"\nError while recruiting the troop: {e}")
+        return
 
 
 # Recruit all the troops

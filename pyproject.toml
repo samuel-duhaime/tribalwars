@@ -10,3 +10,7 @@ packages = [{include = "scripts", from = "src"}]
 python = "^3.10"
 playwright = "^1.46.0"
 python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.11.1"
+

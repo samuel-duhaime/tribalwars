@@ -1,27 +1,60 @@
 import asyncio
 import os
+import threading
 from playwright.async_api import async_playwright
 from login import login
-from construct_buildings import construct_buildings
-from recruit_troops import recruit_troops
-from attack_villages import attack_villages
+# from construct_buildings import construct_buildings
+# from recruit_troops import recruit_troops
+from farm_villages import farm_villages
+from get_user_info import get_user_info
 
 # To run this script, you need to start Google Chrome with remote debugging enabled.
 # google-chrome --remote-debugging-port=9222
 
-# TODO: Get the user information
-async def get_user_info():
+# Shared variable to signal the active script
+active_script = None
+
+
+async def research_weapons() -> None:
+    try:
+        print("Starting research_weapons...")
+        await asyncio.sleep(10)
+        print("Completed research_weapons.")
+    except Exception as e:
+        print(f"Error while researching weapons: {e}")
+
+
+# Handle user input in a separate thread
+def handle_input() -> None:
+    global active_script
     while True:
-        try:
-            print("Getting user information... every 10 seconds")
-            await asyncio.sleep(10)
-        except Exception as e:
-            print(f"Error while getting user information: {e}")
-            break
+        print(f"\nActive script: {active_script}")
+        # Print the available commands
+        scripts_commands = {
+            "login": "Login",
+            "start": "Start every script automatically",
+            "exit": "Exit the scripts",
+        }
+        print(f"\nScripts commands are:\n")
+        for command, description in scripts_commands.items():
+            print(f"{command}: {description}")
+        choice = input("\nEnter your choice: ")
+
+        if choice == "login":
+            active_script = "login"
+        elif choice == "start":
+            active_script = "start"
+        elif choice == "exit":
+            print("\nExiting scripts mode...")
+            active_script = 'exit'
+            return
+        else:
+            print("\nInvalid choice. Please try again.")
 
 
 # Main function
-async def main():
+async def main() -> None:
+    global active_script
     async with async_playwright() as p:
         # Define the user data directory path inside the project
         project_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,55 +65,36 @@ async def main():
             user_data_dir, headless=False
         )
 
+        # Set the default timeout for the context
+        browser.set_default_timeout(10000)
+
         # Open a new page
         page = await browser.new_page()
 
-        # Loop automatically
-        # loop = asyncio.get_event_loop()
-        # loop.run_until_complete(get_user_info())
-        # loop.run_forever()
+        # Start the input handling thread
+        input_thread = threading.Thread(target=handle_input)
+        input_thread.start()
 
         while True:
-            # Dictionary to store building commands
-            scripts_commands = {
-                "login": "Login",
-                "info": "Get user information",
-                "construct": "Construct buildings",
-                "recruit": "Recruit troops",
-                "attack": "Attack villages",
-                "exit": "Exit the scripts",
-            }
-            print(f"\nScripts commands are:\n")
-            for command, description in scripts_commands.items():
-                print(f"{command}: {description}")
-            choice = input("\nEnter your choice: ")
-
-            if choice == "login":
-                # Login to Tribal Wars
-                await login(page)
-            elif choice == "info":
-                # Get the user information
-                await get_user_info()
-            elif choice == "construct":
-                # Construct the buildings
-                await construct_buildings(page)
-            elif choice == "recruit":
-                # Recruit all the troops
-                await recruit_troops(page)
-            elif choice == "attack":
-                # Attack all the villages
-                await attack_villages(page)
-            elif choice == "exit":  # Escape key
-                print("Exiting scripts mode...")
+            if active_script == "login":
+                print("Logging in...")
+                await login(page)  # Login to Tribal Wars
+                print("Logged in.")
+                active_script = None
+            elif active_script == "start":
+                try:
+                    user = await get_user_info(page) # Get the user information
+                    await farm_villages(page, user) # Farm all the villages
+                    # await research_weapons()
+                except Exception as e:
+                    print(f"Error in main loop: {e}")
+            elif active_script == "exit":
+                print("Exiting...")
                 await browser.close()
-                break
-            else:
-                print("Invalid choice. Please try again.")
+                return
 
 
 # Entry point
 if __name__ == "__main__":
-    # loop = asyncio.get_event_loop()
-    # loop.run_until_complete(get_user_info())
-    # loop.run_forever()
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()  # Get the event loop
+    loop.run_until_complete(main())  # Run the main function until it completes
