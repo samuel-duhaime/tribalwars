@@ -7,7 +7,7 @@ google-chrome --remote-debugging-port=9222
 
 Then you can run the script with the following command:
 ```bash
-poetry run python src/scripts/main.py
+poetry run python -m src.scripts.main
 ```
 
 To check the types of the script, you can run the following command:

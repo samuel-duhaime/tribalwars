@@ -1,6 +1,8 @@
 import asyncio
 from pprint import pprint  # Print pretty
 from typing import List, Optional, TypedDict
+from playwright.async_api import Page
+from .get_barbarian_villages import get_barbarian_villages
 
 
 # Define the resources type
@@ -44,17 +46,33 @@ user: User = {
     "current_village_id": 47430,
     "villages": [],
     "last_attack_barbarian_id": 46773,
-    "barbarian_ids": [46773, 46512, 47505],
+    "barbarian_ids": [],
 }
 
 
+# Function to safely convert text content to integer
+def safe_int_conversion(text: str | int) -> int:
+    try:
+        return int(text)
+    except ValueError:
+        return int(0)
+
+
 # Get the user information
-async def get_user_info(page) -> User:
+async def get_user_info(page: Page) -> User:
     global user  # Declare user as global to modify it
     try:
         first_village: Village = {
             "id": 47430,
-            "inactive_troops": {"spears": 72, "swords": 20},
+            "coordinate": {},
+            "production": {"wood": 0, "clay": 0, "iron": 0},
+            "resources": {"wood": 0, "clay": 0, "iron": 0},
+            "storage": 0,
+            "inactive_troops": {"spears": 0, "swords": 0},
+            "total_troops": {"spears": 0, "swords": 0},
+            "buildings": {},
+            "researchs": {},
+            "attacks": {},
         }
 
         await page.goto(
@@ -75,9 +93,9 @@ async def get_user_info(page) -> User:
             "(element) => element.textContent", iron_element
         )
         first_village["resources"] = {
-            "wood": int(wood_number),
-            "clay": int(clay_number),
-            "iron": int(iron_number),
+            "wood": safe_int_conversion(wood_number),
+            "clay": safe_int_conversion(clay_number),
+            "iron": safe_int_conversion(iron_number),
         }
 
         # Get the storage number
@@ -87,33 +105,43 @@ async def get_user_info(page) -> User:
         )
         first_village["storage"] = int(storage_number)
 
-        # TODO: Get the troops number
-        # await page.goto(
-        #     "https://en141.tribalwars.net/game.php?village=47430&screen=barracks"
-        # )
-        # # Find the first td element with the text "?/?"
-        # troops_element = await page.wait_for_selector("td:text-matches('\\d+/\\d+')")
-        # # Get the text content of the td element
-        # troops_number = await page.evaluate(
-        #     "(element) => element.textContent", troops_element
-        # )
-        # # Split the text content to get the individual troop numbers
-        # troops = troops_number.split("/")
-        # # Convert the troop numbers to integers
-        # troops = [int(troop) for troop in troops]
-        # # Create a dictionary with the troop names as keys and the troop numbers as values
-        # troop_names = ["spear", "sword"]  # Add more troop names as needed
-        # troops_dict = dict(zip(troop_names, troops))
-        # Update the first village's troops
-        # first_village["troops"] = troops_dict
+        # TODO: Get the total troops number
+
+        # Get the inactive troops number
+        await page.goto(
+            "https://en141.tribalwars.net/game.php?village=47430&screen=place&mode=units"
+        )
+        # Get the troops from defends
+        defenses_element = await page.wait_for_selector("table#units_home")
+        if defenses_element is not None:
+            spears_defenses_element = await defenses_element.wait_for_selector(
+                "th.unit-item-spear"
+            )
+            spears_defenses_number = await page.evaluate(
+                "(element) => element.textContent", spears_defenses_element
+            )
+            first_village["inactive_troops"]["spears"] = safe_int_conversion(
+                spears_defenses_number
+            )
+            swords_defenses_element = await defenses_element.wait_for_selector(
+                "th.unit-item-sword"
+            )
+            swords_defenses_number = await page.evaluate(
+                "(element) => element.textContent", swords_defenses_element
+            )
+            first_village["inactive_troops"]["swords"] = safe_int_conversion(
+                swords_defenses_number
+            )
 
         # Update the user object
         user["villages"] = [first_village]  # Update the first village
 
-        await asyncio.sleep(5)
+        # Get the barbarian villages ids
+        user["barbarian_ids"] = await get_barbarian_villages(page)
 
         print("\nUser info:")
-        pprint(user)
+        pprint(user, compact=True)
+        await asyncio.sleep(15)
         return user
     except Exception as e:
         print(f"Error while getting user information: {e}")
