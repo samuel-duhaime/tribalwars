@@ -3,13 +3,12 @@ import os
 import threading
 from playwright.async_api import async_playwright
 from .login import login
-# from .construct_buildings import construct_buildings
-# from .recruit_troops import recruit_troops
 from .farm_villages import farm_villages
 from .get_user_info import get_user_info
 
-# To run this script, you need to start Google Chrome with remote debugging enabled.
-# google-chrome --remote-debugging-port=9222
+# from .construct_buildings import construct_buildings
+# from .recruit_troops import recruit_troops
+
 
 # Shared variable to signal the active script
 active_script = None
@@ -46,7 +45,7 @@ def handle_input() -> None:
             active_script = "start"
         elif choice == "exit":
             print("\nExiting scripts mode...")
-            active_script = 'exit'
+            active_script = "exit"
             return
         else:
             print("\nInvalid choice. Please try again.")
@@ -83,8 +82,8 @@ async def main() -> None:
                 active_script = None
             elif active_script == "start":
                 try:
-                    user = await get_user_info(page) # Get the user information
-                    await farm_villages(page, user) # Farm all the villages
+                    user = await get_user_info(page)  # Get the user information
+                    await farm_villages(page, user)  # Farm all the villages
 
                     # await research_weapons()
                 except Exception as e:
