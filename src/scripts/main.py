@@ -2,11 +2,11 @@ import asyncio
 import os
 import threading
 from playwright.async_api import async_playwright
-from login import login
-# from construct_buildings import construct_buildings
-# from recruit_troops import recruit_troops
-from farm_villages import farm_villages
-from get_user_info import get_user_info
+from .login import login
+# from .construct_buildings import construct_buildings
+# from .recruit_troops import recruit_troops
+from .farm_villages import farm_villages
+from .get_user_info import get_user_info
 
 # To run this script, you need to start Google Chrome with remote debugging enabled.
 # google-chrome --remote-debugging-port=9222
@@ -85,6 +85,7 @@ async def main() -> None:
                 try:
                     user = await get_user_info(page) # Get the user information
                     await farm_villages(page, user) # Farm all the villages
+
                     # await research_weapons()
                 except Exception as e:
                     print(f"Error in main loop: {e}")
